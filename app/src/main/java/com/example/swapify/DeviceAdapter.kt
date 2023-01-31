@@ -1,17 +1,14 @@
 package com.example.swapify
 
-import android.os.Bundle
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.device_list_item.view.*
 
-class DeviceAdapter (val devices : MutableList<String>, val context: Context)
+class DeviceAdapter (val devices : MutableList<String>)
     : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    class DeviceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+    class DeviceViewHolder(deviceView: View) : RecyclerView.ViewHolder(deviceView)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return DeviceViewHolder(
@@ -23,10 +20,12 @@ class DeviceAdapter (val devices : MutableList<String>, val context: Context)
         )
     }
 
-
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        holder.
+        // TODO: WICHTIG!!!!
+        // TODO: Warum hab ich mit holder.tvDeviceName keinen zugriff auf die Text View meiner "device_list_item.xml"
+        // TODO  bzw. warum hab ich allgemein keinen Zugriff auf meine .xml id's?
+        // TODO: Warum geht hier "holder: DeviceViewHolder" statt "holder: DeviceViewHolder" nicht?
+
     }
 
     override fun getItemCount(): Int {

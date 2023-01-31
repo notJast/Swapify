@@ -62,7 +62,8 @@ class SettingsFragment : Fragment() {
         val rvConn: RecyclerView = binding.rvConn
         val rvScan: RecyclerView = binding.rvScan
 
-        rvConn.layoutManager = LinearLayoutManager(this)
+        //TODO Warum geht hier das "this" nicht beim LinearLayoutManager?
+        rvConn.layoutManager = LinearLayoutManager(null)
 
         //Bluetooth
         val blueMan = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -108,7 +109,8 @@ class SettingsFragment : Fragment() {
             for(device in bonded) {
                 devices.add(device.name)
             }
-            rvConn.adapter = DeviceAdapter(devices, this)
+            //
+            rvConn.adapter = DeviceAdapter(devices)
             //adapter = ListAdapter(devices, activity, String)
             //val arrayAdapter: ArrayAdapter<String> = ArrayAdapter<String>(ApplicationProvider.getApplicationContext(), rvConn, devices)
         }
