@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -33,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         val navView: BottomNavigationView = binding.navView
 
 
-
         val navController = findNavController(R.id.nav_host_fragment_activity_main)
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -52,12 +52,13 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+/*
         //Bluetooth
         val blueMan = getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
         val blueAd = blueMan.adapter as BluetoothAdapter
 
 
-/*
+
         //init
         if (blueAd == null) {
             swBlue.isClickable = false

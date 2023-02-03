@@ -12,7 +12,6 @@
         android:id="@+id/sw_blue_on_off"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-
         android:minHeight="50dp"
         android:padding="10dp"
         android:switchMinWidth="48dp"
@@ -37,29 +36,43 @@
         android:textSize="20sp"
         android:theme="@style/Theme.Switch"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sw_blue_on_off"
         tools:ignore="UseSwitchCompatOrMaterialXml" />
 
-    <TextView
-        android:id="@+id/tv_conn"
-        android:text="Connected Devices"
+    <Switch
+        android:id="@+id/sw_dis_on_off"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:textColor="@color/sub_black"
-        android:textSize="15sp"
+        android:minHeight="50dp"
+        android:padding="10dp"
+        android:switchMinWidth="48dp"
+        android:text="Discover Devices"
+        android:textColor="@color/main_black"
+        android:textSize="20sp"
+        android:theme="@style/Theme.Switch"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sw_vis_on_off" />
+        app:layout_constraintTop_toBottomOf="@+id/sw_vis_on_off"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+    <TextView
+        android:id="@+id/tv_conn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Connected Devices"
+        android:textColor="@color/sub_black"
+        android:textSize="15sp"
+        android:layout_marginTop="15dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sw_dis_on_off" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_conn"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
-
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_conn" />
@@ -85,6 +98,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_scan" />
+
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

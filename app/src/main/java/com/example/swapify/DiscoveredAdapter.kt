@@ -4,13 +4,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ExpandableListView.OnChildClickListener
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class DeviceAdapter (val devices : MutableList<String>,
-                     val clickListener: (String) -> Unit)
-    : RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder>() {
+class DiscoveredAdapter (val devices : MutableList<String>,
+                         val clickListener: (String) -> Unit)
+    : RecyclerView.Adapter<DiscoveredAdapter.DeviceViewHolder>() {
 
     class DeviceViewHolder(deviceView: View, clickPosition: (Int) -> Unit) : RecyclerView.ViewHolder(deviceView) {
         val tvDm = deviceView.findViewById<TextView>(R.id.tv_device_name)
@@ -61,4 +60,3 @@ class DeviceAdapter (val devices : MutableList<String>,
 
 
 }
-
