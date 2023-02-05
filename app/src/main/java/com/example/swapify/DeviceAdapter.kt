@@ -4,7 +4,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ExpandableListView.OnChildClickListener
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
@@ -13,8 +12,8 @@ class DeviceAdapter (val devices : MutableList<String>,
     : RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder>() {
 
     class DeviceViewHolder(deviceView: View, clickPosition: (Int) -> Unit) : RecyclerView.ViewHolder(deviceView) {
-        val tvDm = deviceView.findViewById<TextView>(R.id.tv_device_name)
-        //val tvSt = deviceView.findViewById<TextView>(R.id.tv_device_name)
+        val tvDm: TextView = deviceView.findViewById(R.id.tv_device_name)
+        //val tvSt: TextView = deviceView.findViewById(R.id.tv_device_name)
         init {
             itemView.setOnClickListener {
                 clickPosition(adapterPosition)
@@ -35,7 +34,6 @@ class DeviceAdapter (val devices : MutableList<String>,
     override fun onBindViewHolder(viewHolder: DeviceViewHolder, position: Int) {
         val curDevice = devices[position]
         val device = viewHolder.tvDm
-        Log.d("testing", "Device Name: $device")
         device.text = curDevice
     }
 
@@ -44,7 +42,6 @@ class DeviceAdapter (val devices : MutableList<String>,
     }
 
     fun addDevice(device: String) {
-        Log.d("testing", "Adding Device: $device")
         devices.add(device)
         notifyItemInserted(devices.size - 1)
     }
@@ -54,11 +51,6 @@ class DeviceAdapter (val devices : MutableList<String>,
         devices.clear()
         notifyItemRangeChanged(0, size)
     }
-
-    fun getPos(device: String): Int {
-        return devices.indexOf(device)
-    }
-
 
 }
 

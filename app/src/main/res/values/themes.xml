@@ -16,6 +16,7 @@
         <item name="android:textColorPrimary">@color/main_gray</item>
         <!-- Customize your theme here. -->
         <item name="android:activatedBackgroundIndicator">@drawable/selected</item>
+        <item name="android:windowBackground">@color/main_green</item>
     </style>
 
     <style name="Theme.Switch" parent="Theme.AppCompat.Light">

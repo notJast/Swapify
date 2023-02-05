@@ -12,8 +12,7 @@ class DiscoveredAdapter (val devices : MutableList<String>,
     : RecyclerView.Adapter<DiscoveredAdapter.DeviceViewHolder>() {
 
     class DeviceViewHolder(deviceView: View, clickPosition: (Int) -> Unit) : RecyclerView.ViewHolder(deviceView) {
-        val tvDm = deviceView.findViewById<TextView>(R.id.tv_device_name)
-        //val tvSt = deviceView.findViewById<TextView>(R.id.tv_device_name)
+        val tvDm: TextView = deviceView.findViewById(R.id.tv_device_name)
         init {
             itemView.setOnClickListener {
                 clickPosition(adapterPosition)
@@ -34,7 +33,6 @@ class DiscoveredAdapter (val devices : MutableList<String>,
     override fun onBindViewHolder(viewHolder: DeviceViewHolder, position: Int) {
         val curDevice = devices[position]
         val device = viewHolder.tvDm
-        Log.d("testing", "Device Name: $device")
         device.text = curDevice
     }
 
@@ -43,7 +41,6 @@ class DiscoveredAdapter (val devices : MutableList<String>,
     }
 
     fun addDevice(device: String) {
-        Log.d("testing", "Adding Device: $device")
         devices.add(device)
         notifyItemInserted(devices.size - 1)
     }
