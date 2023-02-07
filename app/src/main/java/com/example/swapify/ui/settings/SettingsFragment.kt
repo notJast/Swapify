@@ -1,6 +1,5 @@
 package com.example.swapify.ui.settings
 
-
 import android.Manifest
 import android.app.Activity
 import android.bluetooth.*
@@ -28,11 +27,6 @@ import com.example.swapify.DeviceAdapter
 import com.example.swapify.DiscoveredAdapter
 import com.example.swapify.databinding.FragmentSettingsBinding
 
-//TODO 0. send pictures or something
-//TODO 1. make Visiblilty a Button
-//TODO 2. make Home do recieved
-//TODO 3. make recived a chat function?
-
 class SettingsFragment : Fragment() {
 
     private var _binding: FragmentSettingsBinding? = null
@@ -57,8 +51,6 @@ class SettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val settingsViewModel =
-            ViewModelProvider(this).get(SettingsViewModel::class.java)
 
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -71,6 +63,8 @@ class SettingsFragment : Fragment() {
         blueMan = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         blueAd = blueMan.adapter as BluetoothAdapter
         bonded = blueAd.bondedDevices
+
+        bluetoothConnection = BluetoothConnection(a!!)
 
         //Switches
         val swBlue: Switch = binding.swBlueOnOff
@@ -119,7 +113,7 @@ class SettingsFragment : Fragment() {
 
         // Make Discovery possible on old devices
         val REQUEST_CODE = 1
-        if (ContextCompat.checkSelfPermission(a!!, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(a, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(a, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_CODE);
         }
 
@@ -131,18 +125,21 @@ class SettingsFragment : Fragment() {
         }
 
         if (blueAd.isEnabled) {
-            bluetoothConnection = BluetoothConnection(a)
+            startServer()
         }
-
+/*
+        if (bonded.isNotEmpty()) {
+            startConnection()
+        }
+*/
         //Turn Bluetooth On/Off
         swBlue.setOnClickListener {
             if (swBlue.isChecked) {
-                bluetoothConnection = BluetoothConnection(a)
                 val intentEnable = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
                 launcher.launch(intentEnable)
             } else {
+                cancelServer()
                 blueAd.disable()
-                bluetoothConnection.cancelServer()
                 //deviceAdapter.deleteList()
                 //devices.clear()
             }
@@ -188,7 +185,7 @@ class SettingsFragment : Fragment() {
     //StartActivity set-up
     private val  launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            val data: Intent? = result.data
+            startServer()
         }
     }
 
@@ -222,11 +219,15 @@ class SettingsFragment : Fragment() {
                         devices.clear()
                     }
                     if (device.bondState == BluetoothDevice.BOND_BONDING) {
+                        bluetoothConnection.startServer()
+                        Toast.makeText(activity, "Pairing...", Toast.LENGTH_SHORT).show()
                         Log.d(tag, "BONDING...")
                     }
                     if (device.bondState == BluetoothDevice.BOND_BONDED) {
+                        Toast.makeText(activity, "Paired", Toast.LENGTH_SHORT).show()
                         bluetoothDevice = device
                         startConnection()
+                        Toast.makeText(activity, "Connected", Toast.LENGTH_SHORT).show()
                         //bluetoothConnection = BluetoothConnection(context)
                         bonded = blueAd.bondedDevices
                         bonded.forEach { BondedDevice ->
@@ -241,6 +242,14 @@ class SettingsFragment : Fragment() {
 
     private fun startConnection () {
         bluetoothConnection.startClient(bluetoothDevice)
+    }
+
+    private fun startServer () {
+        bluetoothConnection.startServer()
+    }
+
+    private fun cancelServer () {
+        bluetoothConnection.cancelServer()
     }
 
     override fun onDestroyView() {

@@ -23,16 +23,10 @@ class SendFragment : Fragment() {
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View {
-        val sendViewModel =
-                ViewModelProvider(this).get(SendViewModel::class.java)
 
         _binding = FragmentSendBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textSend
-        sendViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
         return root
     }
 

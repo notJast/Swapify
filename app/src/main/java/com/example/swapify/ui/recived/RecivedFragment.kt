@@ -23,16 +23,10 @@ class RecivedFragment : Fragment() {
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View {
-        val recivedViewModel =
-                ViewModelProvider(this).get(RecivedViewModel::class.java)
 
         _binding = FragmentRecivedBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textRecived
-        recivedViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
         return root
     }
 

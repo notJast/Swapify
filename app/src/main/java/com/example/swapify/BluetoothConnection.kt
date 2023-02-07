@@ -2,9 +2,9 @@ package com.example.swapify
 
 import android.bluetooth.*
 import android.content.Context
-import android.os.Bundle
+import android.content.Intent
 import android.util.Log
-import kotlinx.coroutines.NonCancellable.start
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -20,32 +20,26 @@ class BluetoothConnection(context: Context) {
     private var blueMan: BluetoothManager
     private var blueAd: BluetoothAdapter
 
+    private var  blueContext: Context
+
     private lateinit var accThr: AcceptThread
     private lateinit var conThr: ConnectThread
     private lateinit var nedThr: ConnectedThread
 
     init {
-        Log.d(tag, "STARTING CONNECTION")
         this.blueMan = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         this.blueAd = blueMan.adapter as BluetoothAdapter
-        startServer()
-
+        this.blueContext = context
     }
 
-    //private fun randomUUID() = UUID.randomUUID()
-
     private inner class AcceptThread : Thread() {
-
-        init {
-            Log.d(tag, "STARTING ACCEPT THREAD")
-        }
 
         private val blueServerSocket: BluetoothServerSocket? by lazy(LazyThreadSafetyMode.NONE) {
             blueAd.listenUsingInsecureRfcommWithServiceRecord(APP, MY_UUID)
         }
 
         override fun run() {
-            Log.d(tag, "AcceptThread: run.")
+            Log.d(tag, "START SERVER")
             // Keep listening until exception occurs or a socket is returned.
             var shouldLoop = true
             while (shouldLoop) {
@@ -53,6 +47,7 @@ class BluetoothConnection(context: Context) {
                     blueServerSocket?.accept()
                 } catch (e: IOException) {
                     Log.e(tag, "Socket's accept() method failed", e)
+                    //Toast.makeText(blueContext, "ERROR: ${"/n"}Unable to create Bluetooth Server", Toast.LENGTH_LONG).show()
                     shouldLoop = false
                     null
                 }
@@ -66,6 +61,7 @@ class BluetoothConnection(context: Context) {
 
         // Closes the connect socket and causes the thread to finish.
         fun cancel() {
+            Log.d(tag, "CANCEL SERVER")
             try {
                 blueServerSocket?.close()
             } catch (e: IOException) {
@@ -81,27 +77,36 @@ class BluetoothConnection(context: Context) {
         }
 
 
-        public override fun run() {
-            Log.d(tag, "ConnectThread: run.")
+        override fun run() {
+            Log.d(tag, "START CLIENT")
             // Cancel discovery because it otherwise slows down the connection.
             blueAd.cancelDiscovery()
 
             blueClientSocket?.let { socket ->
                 // Connect to the remote device through the socket. This call blocks
                 // until it succeeds or throws an exception.
-                socket.connect()
-                Log.d(tag, "run: ConnectThread connected.")
+                try {
+                    socket.connect()
+                    connected(socket)
+                    Log.d(tag, "ConnectThread connected.")
+                } catch (e: IOException) {
+                    Log.e(tag, "Could find Server to connect to.", e)
+                    //Toast.makeText(blueContext, "ERROR: ${"/n"}Unable to connect to Bluetooth Server", Toast.LENGTH_LONG).show()
+                }
+
 
                 // The connection attempt succeeded. Perform work associated with
                 // the connection in a separate thread.
                 //manageMyConnectedSocket(socket)
-                connected(socket)
+
             }
 
         }
 
         // Closes the client socket and causes the thread to finish.
+        // EXCEPT IT DOESN'T!!!!!! FOR SOME F-ING REASON?!?
         fun cancel() {
+            Log.d(tag, "CANCEL CLIENT")
             try {
                 blueClientSocket?.close()
             } catch (e: IOException) {
@@ -114,16 +119,44 @@ class BluetoothConnection(context: Context) {
 
         private val blueInStream: InputStream = blueSocket.inputStream
         private val blueOutStream: OutputStream = blueSocket.outputStream
-        private val blueBuffer: ByteArray = ByteArray(1024) // mmBuffer store for the stream
+        lateinit var blueBuffer: ByteArray // mmBuffer store for the stream
 
         override fun run() {
-            var numBytes: Int // bytes returned from read()
+            Log.d(tag, "START CONNECTION")
+
+            var tempArray: ByteArray
+            var parts: ByteArray
+            var tempNumBytes: Int
+            var numBytes = 0
+            var counter = 0
+            var sendSize = true
 
             // Keep listening to the InputStream until an exception occurs.
             while (true) {
                 // Read from the InputStream.
-                numBytes = try {
-                    blueInStream.read(blueBuffer)
+                try {
+                    if (sendSize) {
+                        tempArray = ByteArray(blueInStream.available())
+                        if (blueInStream.read(tempArray) > 0) {
+                            numBytes = String(tempArray).toInt()
+                            blueBuffer = ByteArray(numBytes)
+                            sendSize = false
+                        }
+                    } else {
+                        parts = ByteArray(blueInStream.available())
+                        tempNumBytes = blueInStream.read(parts)
+
+                        System.arraycopy(parts, 0, blueBuffer, counter, tempNumBytes)
+                        counter += tempNumBytes
+
+                        if (counter == numBytes) {
+                            val messageIntent = Intent("DATA_MESSAGE")
+                            messageIntent.putExtra("DATA", blueBuffer)
+                            LocalBroadcastManager.getInstance(blueContext).sendBroadcast(messageIntent)
+                            counter = 0
+                            sendSize = true
+                        }
+                    }
                 } catch (e: IOException) {
                     Log.d(tag, "Input stream was disconnected", e)
                     break
@@ -142,8 +175,10 @@ class BluetoothConnection(context: Context) {
         fun write(bytes: ByteArray) {
             try {
                 blueOutStream.write(bytes)
+                blueOutStream.flush()
             } catch (e: IOException) {
                 Log.e(tag, "Error occurred when sending data", e)
+                //Toast.makeText(blueContext, "ERROR: ${"/n"}Data couldn't be send.", Toast.LENGTH_LONG).show()
             /*
                 // Send a failure message back to the activity.
                 val writeErrorMsg = handler.obtainMessage(MESSAGE_TOAST)
@@ -164,8 +199,10 @@ class BluetoothConnection(context: Context) {
              */
         }
 
+
         // Call this method from the main activity to shut down the connection.
         fun cancel() {
+            Log.d(tag, "CANCEL CONNECTION")
             try {
                 blueSocket.close()
             } catch (e: IOException) {
@@ -190,14 +227,12 @@ class BluetoothConnection(context: Context) {
         nedThr.start()
     }
 
-    fun write(out: ByteArray) {
+    fun sendData (out: ByteArray) {
         nedThr.write(out)
     }
 
     fun cancelServer () {
         accThr.cancel()
     }
-
-
 
 }

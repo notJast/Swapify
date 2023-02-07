@@ -14,6 +14,9 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                     tools:ignore="ScopedStorage" />
+
     <application
         android:screenOrientation="portrait"
         android:allowBackup="true"
@@ -22,19 +25,16 @@
         android:theme="@style/Theme.Swapify"
         android:icon="@drawable/full_icon_svg"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/full_icon_svg"
+        android:roundIcon="@drawable/full_icon_round_svg"
         android:supportsRtl="true"
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
-            android:exported="true"
-            android:label="@string/app_name">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
