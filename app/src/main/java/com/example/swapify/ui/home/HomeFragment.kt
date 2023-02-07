@@ -7,10 +7,8 @@ import android.bluetooth.BluetoothManager
 import android.content.*
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
@@ -20,17 +18,12 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.swapify.BluetoothConnection
 import com.example.swapify.databinding.FragmentHomeBinding
 import kotlinx.android.synthetic.main.fragment_home.*
 import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStream
-import java.io.OutputStream
-import java.util.*
 import kotlin.math.min
 
 
@@ -38,8 +31,6 @@ class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
 
-    // This property is only valid between onCreateView and
-    // onDestroyView.
     private val binding get() = _binding!!
 
     private lateinit var bluetoothConnection: BluetoothConnection
@@ -71,6 +62,7 @@ class HomeFragment : Fragment() {
 
         bluetoothConnection = BluetoothConnection(a!!)
 
+        //register reciver
         LocalBroadcastManager.getInstance(a).registerReceiver(messageReciver, IntentFilter(("DATA_MESSAGE")))
 
         //Connection Set-Up
@@ -100,13 +92,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-/*
-        val textView: TextView = binding.textHome
-        homeViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
-
- */
         return root
     }
 

@@ -47,7 +47,6 @@ class BluetoothConnection(context: Context) {
                     blueServerSocket?.accept()
                 } catch (e: IOException) {
                     Log.e(tag, "Socket's accept() method failed", e)
-                    //Toast.makeText(blueContext, "ERROR: ${"/n"}Unable to create Bluetooth Server", Toast.LENGTH_LONG).show()
                     shouldLoop = false
                     null
                 }
@@ -91,16 +90,8 @@ class BluetoothConnection(context: Context) {
                     Log.d(tag, "ConnectThread connected.")
                 } catch (e: IOException) {
                     Log.e(tag, "Could find Server to connect to.", e)
-                    //Toast.makeText(blueContext, "ERROR: ${"/n"}Unable to connect to Bluetooth Server", Toast.LENGTH_LONG).show()
                 }
-
-
-                // The connection attempt succeeded. Perform work associated with
-                // the connection in a separate thread.
-                //manageMyConnectedSocket(socket)
-
             }
-
         }
 
         // Closes the client socket and causes the thread to finish.
@@ -119,7 +110,7 @@ class BluetoothConnection(context: Context) {
 
         private val blueInStream: InputStream = blueSocket.inputStream
         private val blueOutStream: OutputStream = blueSocket.outputStream
-        lateinit var blueBuffer: ByteArray // mmBuffer store for the stream
+        lateinit var blueBuffer: ByteArray
 
         override fun run() {
             Log.d(tag, "START CONNECTION")
@@ -161,13 +152,6 @@ class BluetoothConnection(context: Context) {
                     Log.d(tag, "Input stream was disconnected", e)
                     break
                 }
-                /*
-                // Send the obtained bytes to the UI activity.
-                val readMsg = handler.obtainMessage(
-                    MESSAGE_READ, numBytes, -1,
-                    BlueBuffer)
-                readMsg.sendToTarget()
-                 */
             }
         }
 
@@ -178,25 +162,7 @@ class BluetoothConnection(context: Context) {
                 blueOutStream.flush()
             } catch (e: IOException) {
                 Log.e(tag, "Error occurred when sending data", e)
-                //Toast.makeText(blueContext, "ERROR: ${"/n"}Data couldn't be send.", Toast.LENGTH_LONG).show()
-            /*
-                // Send a failure message back to the activity.
-                val writeErrorMsg = handler.obtainMessage(MESSAGE_TOAST)
-                val bundle = Bundle().apply {
-                    putString("toast", "Couldn't send data to the other device")
-                }
-                writeErrorMsg.data = bundle
-                handler.sendMessage(writeErrorMsg)
-                return
-             */
             }
-
-            // Share the sent message with the UI activity.
-            /*
-            val writtenMsg = handler.obtainMessage(
-                MESSAGE_WRITE, -1, -1, BlueBuffer)
-            writtenMsg.sendToTarget()
-             */
         }
 
 
