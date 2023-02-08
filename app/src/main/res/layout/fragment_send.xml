@@ -9,7 +9,6 @@
 
     <TextView
         android:id="@+id/text_send"
-        android:text="@string/title_send"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"

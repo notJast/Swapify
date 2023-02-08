@@ -42,6 +42,7 @@ class SettingsFragment : Fragment() {
     lateinit var blueAd: BluetoothAdapter
     lateinit var bonded: Set<BluetoothDevice>
 
+    //Local Arrays / Copys of both RecyclerViews
     lateinit var devices: MutableList<BluetoothDevice>
     lateinit var discovered: MutableList<BluetoothDevice>
 
@@ -51,10 +52,11 @@ class SettingsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
 
+    //Inits
+        //Binding
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-    //Inits
         //Activity Ref
         val a = activity
 
@@ -78,9 +80,6 @@ class SettingsFragment : Fragment() {
             blueAd.cancelDiscovery()
             val pos = discoveredAdapter.getPos(it)
             discovered[pos].createBond()
-            //bluetoothDevice = discovered[pos]
-            //Log.d(tag, "BLUETOOTH DEVICE NOW: $bluetoothDevice")
-            //bluetoothConnection = BluetoothConnection(a!!)
             swDis.isChecked = false
             discoveredAdapter.deleteList()
             discovered.clear()
@@ -111,27 +110,32 @@ class SettingsFragment : Fragment() {
         blueAd.cancelDiscovery()
 
         // Make Discovery possible on old devices
+        // I saw this on Stackoverflow, but can't find it :(
+        // I think newer devices need another check but I couldn't test it and didn't wanna put code in here where I didn't know what it did
         val REQUEST_CODE = 1
         if (ContextCompat.checkSelfPermission(a, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(a, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_CODE);
         }
 
-        // Set Connected List AND set-up Device and Connection if necessary
+    // UI-Elements
+        /** Set Connected List AND Set-Up Device and Connection (if necessary)
+         *  1. Check if there are bonded devices
+         *  2. Add all found devices to RecyclerView
+         */
         bonded.forEach { BondedDevice ->
             bluetoothDevice = BondedDevice
             devices.add(BondedDevice)
             deviceAdapter.addDevice(BondedDevice.name)
         }
-
         if (blueAd.isEnabled) {
             startServer()
         }
-/*
-        if (bonded.isNotEmpty()) {
-            startConnection()
-        }
-*/
-        //Turn Bluetooth On/Off
+
+
+        /** Turn Bluetooth On/Off
+         *  1. if Off: Send Intent to turn Bluetooth on
+         *  2. if ON: Disable Bluetooth
+         */
         swBlue.setOnClickListener {
             if (swBlue.isChecked) {
                 val intentEnable = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
@@ -139,12 +143,16 @@ class SettingsFragment : Fragment() {
             } else {
                 cancelServer()
                 blueAd.disable()
-                //deviceAdapter.deleteList()
-                //devices.clear()
+                // Does not delect conected Devices List because for some reason the phones we used still stayed connected
             }
         }
 
-        // Turn Visibility On/Off
+        /** Turn Visibility On/Off
+         *  1. if On: send intent to turn Visibility on
+         *  2. make sure Bluetooth is on first
+         *  3. probably would've been better to implement as button since you can't really turn it off
+         *     except if you turn off Bluetooth itself
+         */
         swVis.setOnClickListener {
             if (blueAd.isEnabled) {
                 if (swVis.isChecked) {
@@ -157,7 +165,10 @@ class SettingsFragment : Fragment() {
             }
         }
 
-        //Discovery List
+        /** Discovery List On/Off
+         *  1. if On: Starts Discovery so Bluetooth devices can be found
+         *  2. if Off: Clears RecyclerView and local array for Found devices
+         */
         swDis.setOnClickListener {
             if (blueAd.isEnabled) {
                 if (swDis.isChecked) {
@@ -176,14 +187,19 @@ class SettingsFragment : Fragment() {
         return root
     }
 
-    //StartActivity set-up
+//Implementaions
+    /** StartActivity set-up
+     *  Also start's up a Server Socket just in case, since Bluetooth is always on when it's called
+     */
     private val  launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             startServer()
         }
     }
 
-    //Reciver Discovery List
+    /** Reciver Discovery List
+     *  If a Bluetooth devices is found it get's added to RecyclerView and local array
+     */
     private val reciver = object: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
@@ -201,7 +217,12 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    //Reciver Bonded Change
+    /** Reciver Bonded Change
+     *  Listens for a Connection State Change:
+     *  No Bond: delete Recycler View and local array
+     *  Bonding: Start a Server in preperation of client
+     *  New Bond: Start Client Request and Add to RecyclerView and local array
+     */
     private val bondReciver = object: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
@@ -222,7 +243,6 @@ class SettingsFragment : Fragment() {
                         bluetoothDevice = device
                         startConnection()
                         Toast.makeText(activity, "Connected", Toast.LENGTH_SHORT).show()
-                        //bluetoothConnection = BluetoothConnection(context)
                         bonded = blueAd.bondedDevices
                         bonded.forEach { BondedDevice ->
                             devices.add(BondedDevice)
@@ -234,6 +254,7 @@ class SettingsFragment : Fragment() {
         }
     }
 
+//Bluetooth Connection Calls
     private fun startConnection () {
         bluetoothConnection.startClient(bluetoothDevice)
     }
@@ -246,6 +267,7 @@ class SettingsFragment : Fragment() {
         bluetoothConnection.cancelServer()
     }
 
+    // Destorys Fragment
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

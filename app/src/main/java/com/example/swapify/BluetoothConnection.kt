@@ -32,7 +32,17 @@ class BluetoothConnection(context: Context) {
         this.blueContext = context
     }
 
+    /** Concept as shown in the Android Developer Docs:
+     *  https://developer.android.com/guide/topics/connectivity/bluetooth/connect-bluetooth-devices
+     *  https://developer.android.com/guide/topics/connectivity/bluetooth/transfer-data
+     */
+
+    //Server Thread
     private inner class AcceptThread : Thread() {
+
+        /** Server
+         *  runs and waits for client to connect
+         */
 
         private val blueServerSocket: BluetoothServerSocket? by lazy(LazyThreadSafetyMode.NONE) {
             blueAd.listenUsingInsecureRfcommWithServiceRecord(APP, MY_UUID)
@@ -40,13 +50,13 @@ class BluetoothConnection(context: Context) {
 
         override fun run() {
             Log.d(tag, "START SERVER")
-            // Keep listening until exception occurs or a socket is returned.
+            // Listen for Client
             var shouldLoop = true
             while (shouldLoop) {
                 val socket: BluetoothSocket? = try {
                     blueServerSocket?.accept()
                 } catch (e: IOException) {
-                    Log.e(tag, "Socket's accept() method failed", e)
+                    Log.e(tag, "Server .accept() failed", e)
                     shouldLoop = false
                     null
                 }
@@ -58,18 +68,23 @@ class BluetoothConnection(context: Context) {
             }
         }
 
-        // Closes the connect socket and causes the thread to finish.
+        // Close Server Socket
         fun cancel() {
             Log.d(tag, "CANCEL SERVER")
             try {
                 blueServerSocket?.close()
             } catch (e: IOException) {
-                Log.e(tag, "Could not close the connect socket", e)
+                Log.e(tag, "Could not close server", e)
             }
         }
     }
 
+    //Client Thread
     private inner class ConnectThread(device: BluetoothDevice) : Thread() {
+
+        /** Client
+         *  tries to find and connect to running Server
+         */
 
         private val blueClientSocket: BluetoothSocket? by lazy(LazyThreadSafetyMode.NONE) {
             device.createRfcommSocketToServiceRecord(MY_UUID)
@@ -78,35 +93,40 @@ class BluetoothConnection(context: Context) {
 
         override fun run() {
             Log.d(tag, "START CLIENT")
-            // Cancel discovery because it otherwise slows down the connection.
+            // Cancel discovery because it slows down connection
             blueAd.cancelDiscovery()
 
             blueClientSocket?.let { socket ->
-                // Connect to the remote device through the socket. This call blocks
-                // until it succeeds or throws an exception.
+                // Connect to Server
                 try {
                     socket.connect()
                     connected(socket)
-                    Log.d(tag, "ConnectThread connected.")
+                    Log.d(tag, "Connected.")
                 } catch (e: IOException) {
-                    Log.e(tag, "Could find Server to connect to.", e)
+                    Log.e(tag, "Could find Server", e)
                 }
             }
         }
 
-        // Closes the client socket and causes the thread to finish.
-        // EXCEPT IT DOESN'T!!!!!! FOR SOME F-ING REASON?!?
+        // Closes Client Socket
         fun cancel() {
             Log.d(tag, "CANCEL CLIENT")
             try {
                 blueClientSocket?.close()
             } catch (e: IOException) {
-                Log.e(tag, "Could not close the client socket", e)
+                Log.e(tag, "Could not close Client", e)
             }
         }
     }
 
+    //Conection Thread
     private inner class ConnectedThread(private val blueSocket: BluetoothSocket) : Thread() {
+
+        /** Connection
+         *  runs after server and client connected
+         *  waits for input as long as connection is up
+         *  send input from on device to another
+         */
 
         private val blueInStream: InputStream = blueSocket.inputStream
         private val blueOutStream: OutputStream = blueSocket.outputStream
@@ -122,11 +142,14 @@ class BluetoothConnection(context: Context) {
             var counter = 0
             var sendSize = true
 
-            // Keep listening to the InputStream until an exception occurs.
+            //runs for as long as Connection is up and waits for Input
             while (true) {
-                // Read from the InputStream.
                 try {
+                    // Following Tutorial:
+                    // https://www.youtube.com/watch?v=EzhWmZjEkrw&list=PLFh8wpMiEi8_I3ujcYY3-OaaYyLudI_qi&index=14
                     if (sendSize) {
+                        // takes size of data and sets buffer
+                        Log.d(tag, "SENDING...")
                         tempArray = ByteArray(blueInStream.available())
                         if (blueInStream.read(tempArray) > 0) {
                             numBytes = String(tempArray).toInt()
@@ -134,6 +157,7 @@ class BluetoothConnection(context: Context) {
                             sendSize = false
                         }
                     } else {
+                        // puts data part by part into buffer
                         parts = ByteArray(blueInStream.available())
                         tempNumBytes = blueInStream.read(parts)
 
@@ -141,6 +165,8 @@ class BluetoothConnection(context: Context) {
                         counter += tempNumBytes
 
                         if (counter == numBytes) {
+                            Log.d(tag, "DATA SEND")
+                            //when all data is in the buffer: send data
                             val messageIntent = Intent("DATA_MESSAGE")
                             messageIntent.putExtra("DATA", blueBuffer)
                             LocalBroadcastManager.getInstance(blueContext).sendBroadcast(messageIntent)
@@ -149,33 +175,37 @@ class BluetoothConnection(context: Context) {
                         }
                     }
                 } catch (e: IOException) {
-                    Log.d(tag, "Input stream was disconnected", e)
+                    Log.d(tag, "Input disconnected", e)
                     break
                 }
             }
         }
 
-        // Call this from the main activity to send data to the remote device.
+        // Sends data
         fun write(bytes: ByteArray) {
+            Log.d(tag, "START SENDING")
             try {
                 blueOutStream.write(bytes)
                 blueOutStream.flush()
             } catch (e: IOException) {
-                Log.e(tag, "Error occurred when sending data", e)
+                Log.e(tag, "Error while sending data", e)
             }
         }
 
-
-        // Call this method from the main activity to shut down the connection.
+        // Cancel Connection
         fun cancel() {
             Log.d(tag, "CANCEL CONNECTION")
             try {
                 blueSocket.close()
             } catch (e: IOException) {
-                Log.e(tag, "Could not close the connect socket", e)
+                Log.e(tag, "Could not close Connection", e)
             }
         }
     }
+
+    /**
+     *  Functions to Initialize and Manage the connection
+     */
 
     @Synchronized
     fun startServer() {

@@ -32,8 +32,12 @@ class RecivedFragment : Fragment() {
         _binding = FragmentRecivedBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
+        val a = activity
+
         blueMan = context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         blueAd = blueMan.adapter as BluetoothAdapter
+
+        bluetoothConnection = BluetoothConnection(a!!)
 
         if (blueAd.isEnabled) {
             startServer()

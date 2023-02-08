@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -46,6 +45,8 @@ class HomeFragment : Fragment() {
             savedInstanceState: Bundle?
     ): View {
 
+    // Init:
+        //Binding
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
@@ -65,16 +66,21 @@ class HomeFragment : Fragment() {
         //register reciver
         LocalBroadcastManager.getInstance(a).registerReceiver(messageReciver, IntentFilter(("DATA_MESSAGE")))
 
+    // Start-Up:
         //Connection Set-Up
         bonded.forEach { BondedDevice ->
             bluetoothDevice = BondedDevice
-            Log.d(tag, "BLUETOOTH DEVICE: $bluetoothDevice" )
         }
 
         if (blueAd.isEnabled) {
             startServer()
         }
 
+    // UI-Elements:
+        /** Send-Button-Listener
+         *  1. Test if Bluetooth is Connected and a device is connected
+         *  2. Start Intent to Open a .jpeg Document
+         */
         btSend.setOnClickListener {
             if (blueAd.isEnabled) {
                 if (bonded.isNotEmpty()) {
@@ -95,7 +101,12 @@ class HomeFragment : Fragment() {
         return root
     }
 
-    //Set-Up reciver
+// Implementation
+    /** Set-Up Reciver
+     *  1. if Intent is recived the incoming Data get's turned into a bitmap
+     *  2. Bitmap is set in ImageView
+     *  3. saveFile is called to save image in storage
+     */
     private val messageReciver = object: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val message: ByteArray? = intent.getByteArrayExtra("DATA")
@@ -106,18 +117,24 @@ class HomeFragment : Fragment() {
         }
     }
 
-    //start-activity set-up
+    /** Set-Up Start-Activity
+     *  1. Takes the data/image and turns it into a bitmap
+     *  2. Uses an OutputStream and compresses bitmap and turns it into a ByteArray
+     *  3. Then it sends the Size of the ByteArray as a ByteArray to set-up the Buffer in the BluetoothConnection.kt
+     *  4. After that it send the Original Array Part by Part
+     */
     private val  launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val data: Intent? = result.data
             val inputStream: InputStream? = requireActivity().contentResolver.openInputStream(data!!.data!!)
             val bitmap: Bitmap = BitmapFactory.decodeStream(inputStream)
+            // This part was made following a Tutorial:
+            // https://www.youtube.com/watch?v=EzhWmZjEkrw&list=PLFh8wpMiEi8_I3ujcYY3-OaaYyLudI_qi&index=14
             val stream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
             val imageBytes: ByteArray = stream.toByteArray()
             val sizeBytes = imageBytes.size.toString().toByteArray()
             sendData(sizeBytes)
-
             val subArraySize = 900
             var i = 0
             while (i < imageBytes.size) {
@@ -130,7 +147,14 @@ class HomeFragment : Fragment() {
         }
     }
 
+    /** Save File to System Storage
+     *  1. Sets-Up ContentResolver and takes image URI
+     *  2. Sets Name and Datatype for image
+     *  3. Saves Image using OutputSteam
+     */
     fun saveFile (bitmap: Bitmap) {
+        // Method as seen in Tutorial:
+        // https://www.youtube.com/watch?v=Ul4hum3y0J8
         val conRes: ContentResolver = requireActivity().contentResolver
         val image = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
@@ -149,6 +173,7 @@ class HomeFragment : Fragment() {
         Toast.makeText(context, "Image saved", Toast.LENGTH_SHORT).show()
     }
 
+//Bluetooth Connection Calls
     private fun sendData(dataArray: ByteArray) {
         bluetoothConnection.sendData(dataArray)
     }
@@ -161,6 +186,7 @@ class HomeFragment : Fragment() {
         bluetoothConnection.startClient(bluetoothDevice)
     }
 
+    // Destorys Fragment
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
